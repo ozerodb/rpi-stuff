@@ -21,6 +21,13 @@ fi
 
 ufw allow from 100.64.0.0/10 to any port 22 proto tcp comment "SSH from Tailscale"
 ufw allow 41641/udp comment "Tailscale WireGuard"
+ufw allow from 100.64.0.0/10 to any port 443 proto tcp comment "HTTPS from Tailscale"
+
+if [[ "$(hostname)" == rpizero2* ]]; then
+    log "Adding rpizero2-specific rules (Gatus, ntfy)..."
+    ufw allow from 100.64.0.0/10 to any port 8080 proto tcp comment "Gatus HTTPS from Tailscale"
+    ufw allow from 100.64.0.0/10 to any port 2586 proto tcp comment "ntfy HTTPS from Tailscale"
+fi
 
 if [[ "$(hostname)" == rpi5* ]]; then
     log "Adding rpi5-specific rules (DNS)..."
