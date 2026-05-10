@@ -8,3 +8,4 @@ auth-users:
   - "reader:$2b$12$xwd3xL2VfGwAhn3eUAgdnubU0P9hsPi9mrI6ibo5EbsjUg0RR3Zki:user"
 auth-access:
   - "reader:*:ro"
+upstream-base-url: "https://ntfy.sh"
