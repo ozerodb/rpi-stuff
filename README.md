@@ -17,8 +17,8 @@ Path-based routing via Caddy. `TAILNET` is the MagicDNS suffix set during firstb
 
 | Service | URL |
 | --- | --- |
-| Gatus | `https://rpizero2.TAILNET.ts.net` |
-| ntfy | `https://rpizero2.TAILNET.ts.net/ntfy` |
+| Gatus | `https://rpizero2.TAILNET.ts.net` → `:8080` |
+| ntfy | `https://rpizero2.TAILNET.ts.net` → `:2586` |
 
 ### rpi5
 

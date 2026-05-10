@@ -8,7 +8,7 @@ connectivity:
 
 alerting:
   ntfy:
-    url: "https://rpizero2.${TAILNET}.ts.net/ntfy"
+    url: "https://rpizero2.${TAILNET}.ts.net:2586"
     topic: alerts
     priority: 2
     default-alert:

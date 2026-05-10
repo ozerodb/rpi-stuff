@@ -74,5 +74,5 @@ services:
       - name: "ntfy"
         icon: "fas fa-bell"
         subtitle: "Push notifications"
-        url: "https://rpizero2.${TAILNET}.ts.net/ntfy"
+        url: "https://rpizero2.${TAILNET}.ts.net:2586"
         target: "_blank"
