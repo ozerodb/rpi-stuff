@@ -6,3 +6,5 @@ behind-proxy: true
 # or python3 -c "import bcrypt, getpass; print(bcrypt.hashpw(getpass.getpass().encode(), bcrypt.gensalt()).decode())"
 auth-users:
   - "reader:$2b$12$xwd3xL2VfGwAhn3eUAgdnubU0P9hsPi9mrI6ibo5EbsjUg0RR3Zki:user"
+auth-access:
+  - "reader:*:ro"
