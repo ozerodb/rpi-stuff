@@ -1,6 +1,6 @@
 cache-file: "/var/lib/ntfy/cache.db"
 auth-file: "/var/lib/ntfy/auth.db"
-auth-default-access: "publish-only"
+auth-default-access: "write-only"
 behind-proxy: true
 # Subscriber account — generate hash: docker run --rm binwiederhier/ntfy user password --bcrypt <password>
 # or python3 -c "import bcrypt, getpass; print(bcrypt.hashpw(getpass.getpass().encode(), bcrypt.gensalt()).decode())"

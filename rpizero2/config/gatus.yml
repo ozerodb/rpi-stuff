@@ -3,7 +3,7 @@ storage:
 
 connectivity:
   checker:
-    target: "1.1.1.1:443"
+    target: "1.1.1.1:53"
     interval: 60s
 
 alerting:

@@ -88,8 +88,10 @@ log "TAILNET persisted to /etc/environment."
 
 if [[ "${BOARD}" == rpizero2* ]]; then
     log "Starting Docker stack on ${BOARD}..."
-    cd "${REPO_DIR}/${BOARD}"
-    docker compose up -d || fail "docker compose up failed."
+    # Run as USERNAME so docker resources are owned by the user, not root.
+    # su -l opens a login shell: picks up /etc/environment (TAILNET) and applies the new docker group.
+    su -l "${USERNAME}" -c "cd '${REPO_DIR}/${BOARD}' && docker compose up -d" \
+        || fail "docker compose up failed."
     log "Docker stack started."
 fi
 
