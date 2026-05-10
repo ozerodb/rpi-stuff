@@ -1,6 +1,7 @@
 rpizero2.{$TAILNET}.ts.net {
     redir /gatus* https://rpizero2.{$TAILNET}.ts.net:8080
     redir /ntfy*  https://rpizero2.{$TAILNET}.ts.net:2586
+    respond `<html><body><p>Nothing to see here. Looking for <a href="/gatus">/gatus</a> or <a href="/ntfy">/ntfy</a>?</p></body></html>` 200
 }
 
 rpizero2.{$TAILNET}.ts.net:8080 {
