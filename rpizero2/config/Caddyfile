@@ -1,6 +1,6 @@
 rpizero2.{$TAILNET}.ts.net {
-    redir /gatus* https://rpizero2.{$TAILNET}.ts.net:8080{uri}
-    redir /ntfy*  https://rpizero2.{$TAILNET}.ts.net:2586{uri}
+    redir /gatus* https://rpizero2.{$TAILNET}.ts.net:8080
+    redir /ntfy*  https://rpizero2.{$TAILNET}.ts.net:2586
 }
 
 rpizero2.{$TAILNET}.ts.net:8080 {
