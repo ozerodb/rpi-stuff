@@ -4,9 +4,9 @@ rpizero2.{$TAILNET}.ts.net {
 }
 
 rpizero2.{$TAILNET}.ts.net:8080 {
-    reverse_proxy localhost:8080
+    reverse_proxy gatus:8080
 }
 
 rpizero2.{$TAILNET}.ts.net:2586 {
-    reverse_proxy localhost:2586
+    reverse_proxy ntfy:80
 }
