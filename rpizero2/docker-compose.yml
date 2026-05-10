@@ -28,7 +28,7 @@ services:
     ports:
       - "127.0.0.1:2586:80"
     environment:
-      - NTFY_BASE_URL=https://ntfy.rpizero2.${TAILNET}.ts.net
+      - NTFY_BASE_URL=https://rpizero2.${TAILNET}.ts.net/ntfy
     volumes:
       - ./config/ntfy.yml:/etc/ntfy/server.yml:ro
       - ntfy_data:/var/lib/ntfy

@@ -1,15 +1,14 @@
-adguardhome.rpi5.{$TAILNET}.ts.net {
-    reverse_proxy localhost:3000
-}
-
-homer.rpi5.{$TAILNET}.ts.net {
-    reverse_proxy localhost:8080
-}
-
-paperless.rpi5.{$TAILNET}.ts.net {
-    reverse_proxy localhost:8000
-}
-
-calibre.rpi5.{$TAILNET}.ts.net {
-    reverse_proxy localhost:8083
+rpi5.{$TAILNET}.ts.net {
+    handle_path /adguard* {
+        reverse_proxy localhost:3000
+    }
+    handle_path /paperless* {
+        reverse_proxy localhost:8000
+    }
+    handle_path /calibre* {
+        reverse_proxy localhost:8083
+    }
+    handle {
+        reverse_proxy localhost:8080
+    }
 }

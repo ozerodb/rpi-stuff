@@ -8,7 +8,7 @@ connectivity:
 
 alerting:
   ntfy:
-    url: "https://ntfy.rpizero2.${TAILNET}.ts.net"
+    url: "https://rpizero2.${TAILNET}.ts.net/ntfy"
     topic: alerts
     priority: 2
     default-alert:
@@ -42,7 +42,7 @@ endpoints:
 
   - name: Pi5 / AdGuard Home
     group: pi5
-    url: "https://adguardhome.rpi5.${TAILNET}.ts.net"
+    url: "https://rpi5.${TAILNET}.ts.net/adguard"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -51,7 +51,7 @@ endpoints:
 
   - name: Pi5 / Homer
     group: pi5
-    url: "https://homer.rpi5.${TAILNET}.ts.net"
+    url: "https://rpi5.${TAILNET}.ts.net"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -60,7 +60,7 @@ endpoints:
 
   - name: Pi5 / Paperless
     group: pi5
-    url: "https://paperless.rpi5.${TAILNET}.ts.net"
+    url: "https://rpi5.${TAILNET}.ts.net/paperless"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -69,7 +69,7 @@ endpoints:
 
   - name: Pi5 / Calibre
     group: pi5
-    url: "https://calibre.rpi5.${TAILNET}.ts.net"
+    url: "https://rpi5.${TAILNET}.ts.net/calibre"
     interval: 1m
     conditions:
       - "[STATUS] == 200"

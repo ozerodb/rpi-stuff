@@ -11,23 +11,23 @@ Just two Raspberry Pis running DietPi, everything on Tailscale.
 
 ## Services
 
-URLs follow `https://<service>.<board>.TAILNET.ts.net`. `TAILNET` is passed to `prepare_firstboot.py` and written to `/etc/environment` on each board; rpi5 also sets it in `.env`.
+Path-based routing via Caddy. `TAILNET` is the MagicDNS suffix set during firstboot.
 
 ### rpizero2
 
 | Service | URL |
 | --- | --- |
-| Gatus | `https://gatus.rpizero2.TAILNET.ts.net` |
-| ntfy | `https://ntfy.rpizero2.TAILNET.ts.net` |
+| Gatus | `https://rpizero2.TAILNET.ts.net` |
+| ntfy | `https://rpizero2.TAILNET.ts.net/ntfy` |
 
 ### rpi5
 
 | Service | URL |
 | --- | --- |
-| AdGuard Home | `https://adguardhome.rpi5.TAILNET.ts.net` |
-| Homer | `https://homer.rpi5.TAILNET.ts.net` |
-| Paperless-ngx | `https://paperless.rpi5.TAILNET.ts.net` |
-| Calibre-Web | `https://calibre.rpi5.TAILNET.ts.net` |
+| Homer | `https://rpi5.TAILNET.ts.net` |
+| AdGuard Home | `https://rpi5.TAILNET.ts.net/adguard` |
+| Paperless-ngx | `https://rpi5.TAILNET.ts.net/paperless` |
+| Calibre-Web | `https://rpi5.TAILNET.ts.net/calibre` |
 
 Caddy handles HTTPS via Tailscale certs.
 

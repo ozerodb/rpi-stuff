@@ -53,7 +53,9 @@ services:
       PAPERLESS_DBNAME: paperless
       PAPERLESS_DBUSER: paperless
       PAPERLESS_DBPASS: ${POSTGRES_PASSWORD}
-      PAPERLESS_URL: "https://paperless.rpi5.${TAILNET}.ts.net"
+      PAPERLESS_URL: "https://rpi5.${TAILNET}.ts.net/paperless"
+      PAPERLESS_FORCE_SCRIPT_NAME: "/paperless"
+      PAPERLESS_STATIC_URL: "/paperless/static/"
       PAPERLESS_ADMIN_USER: admin
       PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD}
       PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY}
@@ -99,6 +101,7 @@ services:
       PUID: 1000
       PGID: 1000
       TZ: ${TZ}
+      SCRIPT_NAME: /calibre
     volumes:
       - ${APPDATA}/calibre-web:/config
       - ${STORAGE}/calibre:/books
