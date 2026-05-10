@@ -13,6 +13,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+      - ./config/index.html:/srv/index.html:ro
 
   gatus:
     image: ghcr.io/twin/gatus:latest
