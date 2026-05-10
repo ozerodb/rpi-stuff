@@ -1,0 +1,8 @@
+.DS_Store
+*.env
+**/.env
+**/data/
+**/*.db
+**/sessions.db
+rpizero2/firstboot/
+rpi5/firstboot/

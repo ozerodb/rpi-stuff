@@ -1,0 +1,110 @@
+services:
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+
+  adguardhome:
+    image: adguard/adguardhome:latest
+    restart: unless-stopped
+    # network_mode: host so UFW controls DNS access directly.
+    # Docker port bindings bypass UFW via iptables; host mode avoids that.
+    # UFW rules in setup_ufw.sh restrict port 53 to Tailscale only.
+    # Web UI at host:3000, reachable by Caddy on localhost.
+    network_mode: host
+    volumes:
+      - ./config/adguardhome:/opt/adguardhome/conf
+      - ${APPDATA}/adguardhome:/opt/adguardhome/work
+
+  homer:
+    image: b4bz/homer:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      TZ: ${TZ}
+      TAILNET: ${TAILNET}
+    volumes:
+      - ./config/homer.yml:/www/src/config.yml:ro
+      - homer_assets:/www/assets
+    entrypoint:
+      - /bin/sh
+      - -c
+      - envsubst < /www/src/config.yml > /www/assets/config.yml && exec /entrypoint.sh
+
+  paperless-ngx:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      paperless-postgres:
+        condition: service_healthy
+      paperless-redis:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      PAPERLESS_REDIS: redis://paperless-redis:6379
+      PAPERLESS_DBHOST: paperless-postgres
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD}
+      PAPERLESS_URL: "https://paperless.rpi5.${TAILNET}.ts.net"
+      PAPERLESS_ADMIN_USER: admin
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY}
+      PAPERLESS_DATA_DIR: /usr/src/paperless/data
+      PAPERLESS_MEDIA_ROOT: /usr/src/paperless/media
+      PAPERLESS_CONSUMPTION_DIR: /usr/src/paperless/consume
+      PAPERLESS_OCR_PAGES: 1
+      PAPERLESS_TASK_WORKERS: 2
+      PAPERLESS_THREADS_PER_WORKER: 1
+      PAPERLESS_OCR_CLEAN: none
+      PAPERLESS_WEBSERVER_WORKERS: 1
+      PAPERLESS_ENABLE_NLTK: false
+    volumes:
+      - ${APPDATA}/paperless:/usr/src/paperless/data
+      - ${STORAGE}/paperless/media:/usr/src/paperless/media
+      - ${STORAGE}/paperless/consume:/usr/src/paperless/consume
+
+  paperless-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ${APPDATA}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperless -d paperless"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  paperless-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8083:8083"
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: ${TZ}
+    volumes:
+      - ${APPDATA}/calibre-web:/config
+      - ${STORAGE}/calibre:/books
+
+
+volumes:
+  caddy_data:
+  caddy_config:
+  homer_assets:

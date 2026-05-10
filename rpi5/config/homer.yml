@@ -1,0 +1,78 @@
+# Docs: https://github.com/bastienwirtz/homer/blob/main/docs/configuration.md
+# TAILNET is substituted at container startup via envsubst — set it in .env
+
+---
+title: "Homelab"
+subtitle: "rpi5"
+icon: "fas fa-server"
+
+header: true
+footer: false
+
+theme: default
+colors:
+  light:
+    highlight-primary: "#3367d6"
+    highlight-secondary: "#4f8ef7"
+    highlight-hover: "#5a95f5"
+    background: "#f2f2f2"
+    card-background: "#ffffff"
+    text: "#363636"
+    text-header: "#424242"
+    text-title: "#303030"
+    text-subtitle: "#424242"
+    card-shadow: rgba(0, 0, 0, 0.1)
+    link: "#3273dc"
+    link-hover: "#363636"
+  dark:
+    highlight-primary: "#3367d6"
+    highlight-secondary: "#4f8ef7"
+    highlight-hover: "#5a95f5"
+    background: "#131313"
+    card-background: "#2b2b2b"
+    text: "#eaeaea"
+    text-header: "#ffffff"
+    text-title: "#fafafa"
+    text-subtitle: "#f2f2f2"
+    card-shadow: rgba(0, 0, 0, 0.4)
+    link: "#3273dc"
+    link-hover: "#ffdd57"
+
+links: []
+
+services:
+  - name: "rpi5"
+    icon: "fas fa-server"
+    items:
+      - name: "AdGuard Home"
+        icon: "fas fa-shield-halved"
+        subtitle: "DNS + ad blocking"
+        url: "https://adguardhome.rpi5.${TAILNET}.ts.net"
+        target: "_blank"
+
+      - name: "Paperless-ngx"
+        icon: "fas fa-file-lines"
+        subtitle: "Document management"
+        url: "https://paperless.rpi5.${TAILNET}.ts.net"
+        target: "_blank"
+
+      - name: "Calibre-Web"
+        icon: "fas fa-book"
+        subtitle: "Ebook library"
+        url: "https://calibre.rpi5.${TAILNET}.ts.net"
+        target: "_blank"
+
+  - name: "rpizero2"
+    icon: "fas fa-microchip"
+    items:
+      - name: "Gatus"
+        icon: "fas fa-heart-pulse"
+        subtitle: "Service monitoring"
+        url: "https://gatus.rpizero2.${TAILNET}.ts.net"
+        target: "_blank"
+
+      - name: "ntfy"
+        icon: "fas fa-bell"
+        subtitle: "Push notifications"
+        url: "https://ntfy.rpizero2.${TAILNET}.ts.net"
+        target: "_blank"

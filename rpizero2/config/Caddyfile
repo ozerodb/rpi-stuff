@@ -1,0 +1,7 @@
+gatus.rpizero2.{$TAILNET}.ts.net {
+    reverse_proxy localhost:8080
+}
+
+ntfy.rpizero2.{$TAILNET}.ts.net {
+    reverse_proxy localhost:2586
+}

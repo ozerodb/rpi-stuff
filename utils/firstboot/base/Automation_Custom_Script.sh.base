@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# Automation_Custom_Script.sh — DietPi first-boot provisioning
+#
+# DO NOT place this file directly on the boot partition.
+# Run: python3 utils/firstboot/prepare_firstboot.py --board <board> --hostname <hostname> --ssh-pubkey
+# The rendered output (with placeholders substituted) goes to {board}/firstboot/
+#
+# Log: /var/tmp/dietpi/logs/rpi-provision.log
+set -euo pipefail
+
+REPO_URL="{{REPO_URL}}"
+TAILSCALE_AUTHKEY="{{TAILSCALE_AUTHKEY}}"
+USERNAME="{{USERNAME}}"
+TAILNET="{{TAILNET}}"
+BOARD="$(hostname)"
+REPO_DIR="/home/${USERNAME}/rpi-stuff"
+LOG_DIR="/var/tmp/dietpi/logs"
+LOG="${LOG_DIR}/rpi-provision.log"
+
+mkdir -p "${LOG_DIR}"
+
+log()  { echo "[$(date '+%H:%M:%S')] $*" | tee -a "${LOG}"; }
+fail() { log "ERROR: $*"; exit 1; }
+
+log "=== ${BOARD} provisioning started ==="
+log "Repo: ${REPO_URL}"
+
+# ── Pre-flight ─────────────────────────────────────────────────────────────────
+
+for _cmd in git docker tailscale fail2ban-server ufw; do
+    command -v "${_cmd}" &>/dev/null \
+        || fail "${_cmd} not found — check AUTO_SETUP_INSTALL_SOFTWARE_ID in dietpi.txt."
+done
+
+# ── Docker group ───────────────────────────────────────────────────────────────
+
+if id "${USERNAME}" &>/dev/null; then
+    usermod -aG docker "${USERNAME}" || fail "usermod failed."
+    log "User '${USERNAME}' added to docker group."
+fi
+
+# ── Clone repo ─────────────────────────────────────────────────────────────────
+
+if [[ -d "${REPO_DIR}/.git" ]]; then
+    log "Repo already present at ${REPO_DIR} — skipping clone."
+else
+    log "Cloning ${REPO_URL}..."
+    git clone "${REPO_URL}" "${REPO_DIR}" || fail "git clone failed."
+    chown -R "${USERNAME}:${USERNAME}" "${REPO_DIR}"
+    log "Repo cloned."
+fi
+
+# ── Provisioning ───────────────────────────────────────────────────────────────
+
+log "Setting up UFW..."
+bash "${REPO_DIR}/utils/scripts/setup_ufw.sh" \
+    || fail "setup_ufw.sh failed."
+
+log "Hardening SSH..."
+bash "${REPO_DIR}/utils/scripts/harden_ssh.sh" \
+    || fail "harden_ssh.sh failed."
+
+log "Setting up fail2ban..."
+bash "${REPO_DIR}/utils/scripts/setup_fail2ban.sh" \
+    || fail "setup_fail2ban.sh failed."
+
+log "Joining Tailnet..."
+bash "${REPO_DIR}/utils/scripts/join_tailnet.sh" "${TAILSCALE_AUTHKEY}" \
+    || fail "join_tailnet.sh failed."
+
+# ── Runtime directories ────────────────────────────────────────────────────────
+
+if [[ "${BOARD}" == rpi5* ]]; then
+    log "Creating rpi5 runtime directories..."
+    # AdGuard Home config dir must exist before container starts (AGH writes its own config on first boot)
+    mkdir -p "${REPO_DIR}/rpi5/config/adguardhome"
+    # APPDATA and STORAGE dirs are created by Docker on first compose up
+    chown -R "${USERNAME}:${USERNAME}" "${REPO_DIR}/rpi5"
+    log "Runtime directories created."
+fi
+
+# ── System environment ─────────────────────────────────────────────────────────
+
+echo "TAILNET=${TAILNET}" >> /etc/environment
+log "TAILNET persisted to /etc/environment."
+
+# ── Auto-start (rpizero2 only) ─────────────────────────────────────────────────
+
+if [[ "${BOARD}" == rpizero2* ]]; then
+    log "Starting Docker stack on ${BOARD}..."
+    cd "${REPO_DIR}/${BOARD}"
+    docker compose up -d || fail "docker compose up failed."
+    log "Docker stack started."
+fi
+
+# ── Summary ────────────────────────────────────────────────────────────────────
+
+log ""
+
+if [[ "${BOARD}" == rpizero2* ]]; then
+    log "=== First boot complete. Docker stack started. ==="
+    log ""
+    log "Full log: ${LOG}"
+else
+    log "=== First boot complete. Docker stack NOT started. ==="
+    log ""
+    log "Transfer secrets to the board, then start the stack."
+    log ""
+    log "  # Transfer .env (scp often fails on DietPi — use ssh pipe instead):"
+    log "  cat local-${BOARD}.env | ssh ${USERNAME}@<tailscale-ip> \\"
+    log "      \"cat > ${REPO_DIR}/${BOARD}/.env && chmod 600 ${REPO_DIR}/${BOARD}/.env\""
+    log ""
+    log "  # Start the stack:"
+    log "  ssh ${USERNAME}@<tailscale-ip> \"cd ${REPO_DIR} && ./utils/scripts/update-stack.sh\""
+    log ""
+    log "Full log: ${LOG}"
+fi

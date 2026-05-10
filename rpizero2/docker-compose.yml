@@ -1,0 +1,39 @@
+services:
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TAILNET
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+
+  gatus:
+    image: ghcr.io/twin/gatus:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - TAILNET
+    volumes:
+      - ./config/gatus.yml:/config/config.yaml:ro
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    command: serve
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2586:80"
+    environment:
+      - NTFY_BASE_URL=https://ntfy.rpizero2.${TAILNET}.ts.net
+    volumes:
+      - ./config/ntfy.yml:/etc/ntfy/server.yml:ro
+      - ntfy_data:/var/lib/ntfy
+
+volumes:
+  caddy_data:
+  caddy_config:
+  ntfy_data:

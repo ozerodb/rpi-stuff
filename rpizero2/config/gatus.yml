@@ -1,0 +1,77 @@
+storage:
+  type: memory
+
+connectivity:
+  checker:
+    target: "1.1.1.1:443"
+    interval: 60s
+
+alerting:
+  ntfy:
+    url: "https://ntfy.rpizero2.${TAILNET}.ts.net"
+    topic: alerts
+    priority: 2
+    default-alert:
+      enabled: true
+      failure-threshold: 3
+      success-threshold: 2
+      send-on-resolved: true
+
+endpoints:
+  # ── Internet connectivity (dashboard only, no alerts) ─────────────────────
+
+  - name: Internet / Ping
+    group: connectivity
+    url: "icmp://1.1.1.1"
+    interval: 1m
+    conditions:
+      - "[CONNECTED] == true"
+      - "[RESPONSE_TIME] < 200"
+
+  - name: Internet / DNS
+    group: connectivity
+    url: "8.8.8.8"
+    dns:
+      query-name: "example.com"
+      query-type: "A"
+    interval: 1m
+    conditions:
+      - "[DNS_RCODE] == NOERROR"
+
+  # ── Pi5 services ──────────────────────────────────────────────────────────
+
+  - name: Pi5 / AdGuard Home
+    group: pi5
+    url: "https://adguardhome.rpi5.${TAILNET}.ts.net"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Pi5 / Homer
+    group: pi5
+    url: "https://homer.rpi5.${TAILNET}.ts.net"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Pi5 / Paperless
+    group: pi5
+    url: "https://paperless.rpi5.${TAILNET}.ts.net"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Pi5 / Calibre
+    group: pi5
+    url: "https://calibre.rpi5.${TAILNET}.ts.net"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
