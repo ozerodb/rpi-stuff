@@ -19,11 +19,20 @@ if [[ -n "${LAN_SUBNET}" ]]; then
     ufw allow from "${LAN_SUBNET}" to any port 22 proto tcp comment "SSH from LAN"
 fi
 
-ufw allow from 100.64.0.0/10 to any port 22 proto tcp comment "SSH from Tailscale"
+# Tailnet rules match the interface, not 100.64.0.0/10: a source range can be spoofed on the LAN.
+# Caddy runs with network_mode: host on both boards, so these rules actually apply to it
+# (ports published by Docker would bypass UFW).
+ufw allow in on tailscale0 to any port 22 proto tcp comment "SSH from Tailscale"
+ufw allow in on tailscale0 to any port 443 proto tcp comment "HTTPS from Tailscale"
 ufw allow 41641/udp comment "Tailscale WireGuard"
 if [[ "$(hostname)" == rpi5* ]]; then
     log "Adding rpi5-specific rules (DNS)..."
-    ufw allow from 100.64.0.0/10 to any port 53 comment "DNS from Tailscale"
+    ufw allow in on tailscale0 to any port 53 comment "DNS from Tailscale"
+fi
+if [[ "$(hostname)" == rpizero2* ]]; then
+    log "Adding rpizero2-specific rules (Gatus, ntfy)..."
+    ufw allow in on tailscale0 to any port 8080 proto tcp comment "Gatus HTTPS from Tailscale"
+    ufw allow in on tailscale0 to any port 2586 proto tcp comment "ntfy HTTPS from Tailscale"
 fi
 
 ufw --force enable

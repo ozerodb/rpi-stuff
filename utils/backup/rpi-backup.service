@@ -1,0 +1,12 @@
+[Unit]
+Description=restic backup (rpi-stuff)
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/rpi-backup.env
+# @REPO_DIR@ is substituted by install.sh
+ExecStart=@REPO_DIR@/utils/backup/backup.sh
+Nice=10
+IOSchedulingClass=idle

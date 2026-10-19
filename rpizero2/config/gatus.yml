@@ -8,7 +8,10 @@ connectivity:
 
 alerting:
   ntfy:
-    url: "https://rpizero2.${TAILNET}.ts.net:2586"
+    # Straight to the container: no dependency on Caddy, TLS or tailnet DNS.
+    url: "http://ntfy:80"
+    token: "${NTFY_PUBLISH_TOKEN}"
+    click: "https://rpizero2.${TAILNET}.ts.net:8080"
     topic: alerts
     priority: 2
     default-alert:

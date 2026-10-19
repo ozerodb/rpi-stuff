@@ -2,36 +2,54 @@ services:
   caddy:
     image: caddy:latest
     restart: unless-stopped
-    ports:
-      - "443:443"
-      - "8080:8080"
-      - "2586:2586"
+    # network_mode: host so UFW controls access (Docker port bindings bypass UFW via iptables).
+    # Caddy listens on 443/8080/2586; the backends below are bound to loopback on other ports.
+    network_mode: host
     environment:
-      - TAILNET
+      TAILNET: ${TAILNET}
     volumes:
       - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
       - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
       - ./config/index.html:/srv/index.html:ro
+    security_opt:
+      - no-new-privileges:true
 
   gatus:
     image: ghcr.io/twin/gatus:latest
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8080"
     environment:
-      - TAILNET
+      TAILNET: ${TAILNET}
+      NTFY_PUBLISH_TOKEN: ${NTFY_PUBLISH_TOKEN}
     volumes:
       - ./config/gatus.yml:/config/config.yaml:ro
+    security_opt:
+      - no-new-privileges:true
 
   ntfy:
     image: binwiederhier/ntfy:latest
     command: serve
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8082:80"
+    # Public resolvers, so the ntfy.sh upstream (iOS push) still works when rpi5 —
+    # the tailnet's DNS server — is down, which is exactly when the alert matters.
+    dns:
+      - 9.9.9.9
+      - 1.1.1.1
     environment:
-      - NTFY_BASE_URL=https://rpizero2.${TAILNET}.ts.net:2586
+      NTFY_BASE_URL: https://rpizero2.${TAILNET}.ts.net:2586
+      # Users and tokens come from .env (rendered by prepare_firstboot.py); ACLs live in ntfy.yml.
+      NTFY_AUTH_USERS: ${NTFY_AUTH_USERS}
+      NTFY_AUTH_TOKENS: ${NTFY_AUTH_TOKENS}
     volumes:
       - ./config/ntfy.yml:/etc/ntfy/server.yml:ro
       - ntfy_data:/var/lib/ntfy
+    security_opt:
+      - no-new-privileges:true
 
 volumes:
   caddy_data:

@@ -263,7 +263,7 @@ CONFIG_NTP_MIRROR=default
 #	0=Allow password logins for all users, including root
 #	root=Disable password login for root user only
 #	1=Disable password logins for all users, assure that you have a valid SSH key applied!
-SOFTWARE_DISABLE_SSH_PASSWORD_LOGINS=0
+SOFTWARE_DISABLE_SSH_PASSWORD_LOGINS=1
 
 # WireGuard
 # - Whether to install WireGuard as "Server" or "Client", relevant for unattended installs only, else a menu is shown

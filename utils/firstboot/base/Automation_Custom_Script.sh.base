@@ -2,7 +2,7 @@
 # Automation_Custom_Script.sh — DietPi first-boot provisioning
 #
 # DO NOT place this file directly on the boot partition.
-# Run: python3 utils/firstboot/prepare_firstboot.py --board <board> --hostname <hostname> --ssh-pubkey
+# Run: python3 utils/firstboot/prepare_firstboot.py --board <board> --tailnet <tailnet> --ssh-pubkey
 # The rendered output (with placeholders substituted) goes to {board}/firstboot/
 #
 # Log: /var/tmp/dietpi/logs/rpi-provision.log
@@ -16,6 +16,12 @@ BOARD="$(hostname)"
 REPO_DIR="/home/${USERNAME}/rpi-stuff"
 LOG_DIR="/var/tmp/dietpi/logs"
 LOG="${LOG_DIR}/rpi-provision.log"
+
+# Board .env rendered by prepare_firstboot.py (empty for rpi5, whose .env is transferred by hand).
+BOARD_ENV="$(cat <<'__BOARD_ENV__'
+{{BOARD_ENV}}
+__BOARD_ENV__
+)"
 
 mkdir -p "${LOG_DIR}"
 
@@ -32,13 +38,6 @@ for _cmd in git docker tailscale fail2ban-server ufw; do
         || fail "${_cmd} not found — check AUTO_SETUP_INSTALL_SOFTWARE_ID in dietpi.txt."
 done
 
-# ── Docker group ───────────────────────────────────────────────────────────────
-
-if id "${USERNAME}" &>/dev/null; then
-    usermod -aG docker "${USERNAME}" || fail "usermod failed."
-    log "User '${USERNAME}' added to docker group."
-fi
-
 # ── Clone repo ─────────────────────────────────────────────────────────────────
 
 if [[ -d "${REPO_DIR}/.git" ]]; then
@@ -52,37 +51,30 @@ fi
 
 # ── Provisioning ───────────────────────────────────────────────────────────────
 
-log "Setting up UFW..."
-bash "${REPO_DIR}/utils/scripts/setup_ufw.sh" \
-    || fail "setup_ufw.sh failed."
-
-log "Hardening SSH..."
-bash "${REPO_DIR}/utils/scripts/harden_ssh.sh" \
-    || fail "harden_ssh.sh failed."
-
-log "Setting up fail2ban..."
-bash "${REPO_DIR}/utils/scripts/setup_fail2ban.sh" \
-    || fail "setup_fail2ban.sh failed."
+log "Provisioning host (docker group, UFW, SSH, fail2ban)..."
+bash "${REPO_DIR}/utils/scripts/provision.sh" "${USERNAME}" \
+    || fail "provision.sh failed."
 
 log "Joining Tailnet..."
 bash "${REPO_DIR}/utils/scripts/join_tailnet.sh" "${TAILSCALE_AUTHKEY}" \
     || fail "join_tailnet.sh failed."
 
-# ── Runtime directories ────────────────────────────────────────────────────────
-
-if [[ "${BOARD}" == rpi5* ]]; then
-    log "Creating rpi5 runtime directories..."
-    # AdGuard Home config dir must exist before container starts (AGH writes its own config on first boot)
-    mkdir -p "${REPO_DIR}/rpi5/config/adguardhome"
-    # APPDATA and STORAGE dirs are created by Docker on first compose up
-    chown -R "${USERNAME}:${USERNAME}" "${REPO_DIR}/rpi5"
-    log "Runtime directories created."
-fi
-
 # ── System environment ─────────────────────────────────────────────────────────
 
+sed -i '/^TAILNET=/d' /etc/environment
 echo "TAILNET=${TAILNET}" >> /etc/environment
 log "TAILNET persisted to /etc/environment."
+
+if [[ -n "${BOARD_ENV}" ]]; then
+    ENV_FILE="${REPO_DIR}/${BOARD}/.env"
+    if [[ -f "${ENV_FILE}" ]]; then
+        log "${ENV_FILE} already present — leaving it untouched."
+    else
+        install -m 600 -o "${USERNAME}" -g "${USERNAME}" /dev/null "${ENV_FILE}"
+        printf '%s\n' "${BOARD_ENV}" > "${ENV_FILE}"
+        log "Board secrets written to ${ENV_FILE}."
+    fi
+fi
 
 # ── Auto-start (rpizero2 only) ─────────────────────────────────────────────────
 
