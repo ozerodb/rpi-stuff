@@ -6,3 +6,5 @@
 **/sessions.db
 rpizero2/firstboot/
 rpi5/firstboot/
+# AdGuard Home writes its config (incl. admin password hash) here at runtime
+rpi5/config/adguardhome/

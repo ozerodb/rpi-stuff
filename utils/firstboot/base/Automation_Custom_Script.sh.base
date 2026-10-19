@@ -2,7 +2,7 @@
 # Automation_Custom_Script.sh — DietPi first-boot provisioning
 #
 # DO NOT place this file directly on the boot partition.
-# Run: python3 utils/firstboot/prepare_firstboot.py --board <board> --hostname <hostname> --ssh-pubkey
+# Run: python3 utils/firstboot/prepare_firstboot.py --board <board> --tailnet <tailnet> --ssh-pubkey
 # The rendered output (with placeholders substituted) goes to {board}/firstboot/
 #
 # Log: /var/tmp/dietpi/logs/rpi-provision.log
@@ -16,6 +16,12 @@ BOARD="$(hostname)"
 REPO_DIR="/home/${USERNAME}/rpi-stuff"
 LOG_DIR="/var/tmp/dietpi/logs"
 LOG="${LOG_DIR}/rpi-provision.log"
+
+# Board .env rendered by prepare_firstboot.py (empty for rpi5, whose .env is transferred by hand).
+BOARD_ENV="$(cat <<'__BOARD_ENV__'
+{{BOARD_ENV}}
+__BOARD_ENV__
+)"
 
 mkdir -p "${LOG_DIR}"
 
@@ -57,7 +63,7 @@ bash "${REPO_DIR}/utils/scripts/setup_ufw.sh" \
     || fail "setup_ufw.sh failed."
 
 log "Hardening SSH..."
-bash "${REPO_DIR}/utils/scripts/harden_ssh.sh" \
+bash "${REPO_DIR}/utils/scripts/harden_ssh.sh" "${USERNAME}" \
     || fail "harden_ssh.sh failed."
 
 log "Setting up fail2ban..."
@@ -81,8 +87,20 @@ fi
 
 # ── System environment ─────────────────────────────────────────────────────────
 
+sed -i '/^TAILNET=/d' /etc/environment
 echo "TAILNET=${TAILNET}" >> /etc/environment
 log "TAILNET persisted to /etc/environment."
+
+if [[ -n "${BOARD_ENV}" ]]; then
+    ENV_FILE="${REPO_DIR}/${BOARD}/.env"
+    if [[ -f "${ENV_FILE}" ]]; then
+        log "${ENV_FILE} already present — leaving it untouched."
+    else
+        install -m 600 -o "${USERNAME}" -g "${USERNAME}" /dev/null "${ENV_FILE}"
+        printf '%s\n' "${BOARD_ENV}" > "${ENV_FILE}"
+        log "Board secrets written to ${ENV_FILE}."
+    fi
+fi
 
 # ── Auto-start (rpizero2 only) ─────────────────────────────────────────────────
 
