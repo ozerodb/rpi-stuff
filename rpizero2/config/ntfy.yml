@@ -1,11 +1,12 @@
 cache-file: "/var/lib/ntfy/cache.db"
 auth-file: "/var/lib/ntfy/auth.db"
-auth-default-access: "write-only"
+auth-default-access: "deny-all"
 behind-proxy: true
-# Subscriber account — generate hash: docker run --rm binwiederhier/ntfy user password --bcrypt <password>
-# or python3 -c "import bcrypt, getpass; print(bcrypt.hashpw(getpass.getpass().encode(), bcrypt.gensalt()).decode())"
-auth-users:
-  - "reader:$2b$12$xwd3xL2VfGwAhn3eUAgdnubU0P9hsPi9mrI6ibo5EbsjUg0RR3Zki:user"
+# Users (bcrypt hashes) and tokens are secrets: they come from NTFY_AUTH_USERS / NTFY_AUTH_TOKENS
+# in rpizero2/.env, rendered by utils/firstboot/prepare_firstboot.py.
+#   reader    — password login, for the phone app
+#   publisher — token only, for Gatus and scripts (NTFY_PUBLISH_TOKEN)
 auth-access:
   - "reader:*:ro"
+  - "publisher:*:wo"
 upstream-base-url: "https://ntfy.sh"
