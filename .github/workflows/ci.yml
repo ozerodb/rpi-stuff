@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: shellcheck
+        run: |
+          shellcheck utils/scripts/*.sh utils/backup/*.sh
+          shellcheck -s bash utils/firstboot/base/Automation_Custom_Script.sh.base
+
+      - name: yamllint
+        run: |
+          pip install --quiet yamllint
+          yamllint -d "{extends: relaxed, rules: {line-length: disable}}" rpi5/config/homer.yml rpizero2/config/*.yml .github/workflows/*.yml
+
+      - name: Render first-boot files (smoke test)
+        env:
+          FIRSTBOOT_PASSWORD: ci-password-not-real
+          TS_AUTHKEY: tskey-auth-ci-not-real
+          NTFY_READER_PASSWORD: ci-password-not-real
+        run: |
+          pip install --quiet bcrypt
+          ssh-keygen -q -t ed25519 -N '' -f "$RUNNER_TEMP/id_ed25519"
+          for board in rpizero2 rpi5; do
+            python3 utils/firstboot/prepare_firstboot.py \
+              --board "$board" --tailnet ci-tailnet --ssh-pubkey "$RUNNER_TEMP/id_ed25519.pub"
+            bash -n "$board/firstboot/Automation_Custom_Script.sh"
+            shellcheck -s bash "$board/firstboot/Automation_Custom_Script.sh"
+          done
+
+      - name: docker compose config
+        run: |
+          docker compose -f rpi5/docker-compose.yml --env-file rpi5/.env.example config --quiet
+          # Uses the .env rendered by the smoke test above.
+          docker compose -f rpizero2/docker-compose.yml --env-file rpizero2/firstboot/board.env config --quiet
+
+      - name: Caddyfile validation
+        run: |
+          for board in rpi5 rpizero2; do
+            docker run --rm -e TAILNET=ci-tailnet \
+              -v "$PWD/$board/config/Caddyfile:/etc/caddy/Caddyfile:ro" \
+              caddy:2 caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
+          done
