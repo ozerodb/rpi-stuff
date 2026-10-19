@@ -18,8 +18,8 @@ services:
     # Web UI at host:3000, reachable by Caddy on localhost.
     network_mode: host
     volumes:
-      - ./config/adguardhome:/opt/adguardhome/conf
-      - ${APPDATA}/adguardhome:/opt/adguardhome/work
+      - ${APPDATA}/adguardhome/conf:/opt/adguardhome/conf
+      - ${APPDATA}/adguardhome/work:/opt/adguardhome/work
 
   homer:
     image: b4bz/homer:latest

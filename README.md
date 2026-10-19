@@ -117,8 +117,8 @@ Secrets passed as flag values still work but end up in shell history, so the scr
 
 Copy the two output files to the boot partition (SD card for rpizero2, NVMe for rpi5 — see above), then power on (~10–15 min). First boot:
 
-1. Adds `dietpi` to docker group, clones this repo
-2. Configures UFW, hardens SSH (drop-in config, validated with `sshd -t`, refuses to run without an authorized key), sets up fail2ban
+1. Clones this repo
+2. Runs `utils/scripts/provision.sh`: docker group, UFW, SSH hardening (drop-in config, validated with `sshd -t`, refuses to run without an authorized key), fail2ban
 3. Joins Tailnet (rpi5 also advertises as exit node)
 4. Writes `TAILNET` to `/etc/environment` (persists across reboots)
 5. **rpizero2:** writes `rpizero2/.env` and starts the Docker stack — no manual steps needed
@@ -130,11 +130,7 @@ Copy the two output files to the boot partition (SD card for rpizero2, NVMe for 
 
 **rpizero2** — stack starts automatically during first boot; `.env` comes from the first-boot script.
 
-For future updates:
-
-```bash
-ssh dietpi@<tailscale-ip> "cd ~/rpi-stuff && ./utils/scripts/update-stack.sh"
-```
+For future updates see [Updating](#updating).
 
 **rpi5** — transfer `.env` first, then start:
 
@@ -147,7 +143,17 @@ cat local-rpi5.env | ssh dietpi@<tailscale-ip> \
 ssh dietpi@<tailscale-ip> "cd ~/rpi-stuff && ./utils/scripts/update-stack.sh"
 ```
 
-`update-stack.sh` also handles future updates: `git pull` + `docker compose up -d`.
+## Updating
+
+Everything on a board comes from this repo, so an update is the same two steps whatever changed:
+
+```bash
+ssh dietpi@<tailscale-ip> "cd ~/rpi-stuff && git pull && sudo ./utils/scripts/provision.sh && ./utils/scripts/update-stack.sh"
+```
+
+- `provision.sh` re-applies host config (docker group, UFW, SSH, fail2ban). It is idempotent: safe to run any time.
+- `update-stack.sh` pulls and restarts the containers. It refuses to run if the board's `.env` is missing.
+- State lives outside the checkout (`APPDATA`, `STORAGE`, Docker volumes), except `.env`. Tailscale SSH (`tailscale ssh dietpi@<board>`) bypasses sshd and UFW, so it is the fallback if a change locks you out.
 
 ### ntfy accounts
 
@@ -172,8 +178,6 @@ cat rpizero2/firstboot/board.env | ssh dietpi@<tailscale-ip> "umask 077 && cat >
 ssh dietpi@<tailscale-ip> "cd ~/rpi-stuff && ./utils/scripts/update-stack.sh"
 ```
 
-Re-run `sudo bash utils/scripts/setup_ufw.sh` on a board provisioned before Caddy moved to host networking, so that 443/8080/2586 are open on `tailscale0`.
-
 ---
 
 ## Post-boot
@@ -190,7 +194,7 @@ Re-run `sudo bash utils/scripts/setup_ufw.sh` on a board provisioned before Cadd
 
 ## Backups (rpi5)
 
-Nightly [restic](https://restic.net) backup of `APPDATA`, `STORAGE` and `rpi5/config/` (AdGuard config), with a `pg_dump` of Paperless taken first — the raw Postgres directory is excluded.
+Nightly [restic](https://restic.net) backup of `APPDATA` (including AdGuard's config), `STORAGE` and `rpi5/.env`, with a `pg_dump` of Paperless taken first — the raw Postgres directory is excluded.
 
 ```bash
 sudo ./utils/backup/install.sh          # installs restic, systemd service + timer, /etc/rpi-backup.env

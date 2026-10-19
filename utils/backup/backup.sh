@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# backup.sh — restic backup of this board's app data and user files. Run as root.
+# backup.sh — restic backup of this board's app data, user files and .env. Run as root.
 #
 # Configured through environment variables (systemd loads /etc/rpi-backup.env, see
 # rpi-backup.env.example). Dumps Paperless' Postgres first, since copying a live
@@ -63,7 +63,7 @@ if "${compose[@]}" ps --status running --services 2>/dev/null | grep -qx paperle
 fi
 
 paths=()
-for p in "${APPDATA}" "${STORAGE}" "${BOARD_DIR}/config"; do
+for p in "${APPDATA}" "${STORAGE}" "${BOARD_DIR}/.env"; do
     if [[ -e "${p}" ]]; then
         paths+=("${p}")
     fi
